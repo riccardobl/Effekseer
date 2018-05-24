@@ -166,14 +166,14 @@ void InstanceGroup::Update( float deltaFrame, bool shown )
 	}
 	else
 	{
-		std::array<IntrusiveList<Instance>::Iterator, 8> its_begin;
-		std::array<IntrusiveList<Instance>::Iterator, 8> its_end;
+		std::array<IntrusiveList<Instance>::Iterator, 4> its_begin;
+		std::array<IntrusiveList<Instance>::Iterator, 4> its_end;
 
-		auto size = m_instances.size() / 8;
+		auto size = m_instances.size() / 4;
 		
 		auto it = m_instances.begin();
 
-		for (int32_t tnum = 0; tnum < 8; tnum++)
+		for (int32_t tnum = 0; tnum < 4; tnum++)
 		{
 			its_begin[tnum] = it;
 
@@ -185,7 +185,7 @@ void InstanceGroup::Update( float deltaFrame, bool shown )
 			its_end[tnum] = it;
 		}
 
-		its_end[7] = m_instances.end();
+		its_end[3] = m_instances.end();
 
 		it = m_instances.begin();
 
@@ -202,7 +202,7 @@ void InstanceGroup::Update( float deltaFrame, bool shown )
 		}
 
 		auto m = (ManagerImplemented*)this->m_manager;
-		for (int32_t i = 0; i < 8; i++)
+		for (int32_t i = 0; i < 4; i++)
 		{
 			auto ind = i;
 			m->GetInternalThreadPool()->PushTask([&, ind] {

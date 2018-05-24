@@ -22,10 +22,13 @@ void ThreadPool::ThreadFunc()
 		
 		task();
 
-		
-		executing--;
-		wait_cv.notify_one();
-		
+		{
+			std::unique_lock<std::mutex> lock(wait_mutex);
+			executing--;
+			/*if (executing == 0)*/ //printf("t %d\n", executing);
+
+			wait_cv.notify_one();
+		}
 	}
 }
 
@@ -77,7 +80,9 @@ void ThreadPool::WaitAll()
 		std::unique_lock<std::mutex> lock(wait_mutex);
 		
 		wait_cv.wait(lock, [this]() -> bool {
-			return executing == 0;
+			auto ret = executing == 0;
+			/*if (!ret)*/ //printf("w %d\n", executing);
+			return ret;
 		});
 	}
 }
