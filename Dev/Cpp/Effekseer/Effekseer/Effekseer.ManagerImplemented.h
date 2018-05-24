@@ -10,6 +10,7 @@
 #include "Effekseer.Matrix43.h"
 #include "Effekseer.Matrix44.h"
 #include "Effekseer.CriticalSection.h"
+#include "Effekseer.ThreadPool.h"
 #include "Culling/Culling3D.h"
 
 //----------------------------------------------------------------------------------
@@ -193,6 +194,9 @@ private:
 
 	// ランダム関数最大値
 	int			m_randMax;
+
+	//! internal thread pool
+	ThreadPool	m_threadPool;
 
 	// 描画オブジェクト追加
 	Handle AddDrawSet( Effect* effect, InstanceContainer* pInstanceContainer, InstanceGlobal* pGlobalPointer );
@@ -604,6 +608,11 @@ public:
 		@brief	現在存在するエフェクトのハンドルからカリングの空間を配置しなおす。
 	*/
 	void RessignCulling() override;
+
+	/**
+		@brief	Get internal thread pool for parallel computing
+	*/
+	ThreadPool* GetInternalThreadPool();
 
 	virtual int GetRef() { return ReferenceObject::GetRef(); }
 	virtual int AddRef() { return ReferenceObject::AddRef(); }

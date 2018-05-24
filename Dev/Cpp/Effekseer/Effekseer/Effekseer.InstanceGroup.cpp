@@ -137,29 +137,118 @@ void InstanceGroup::Update( float deltaFrame, bool shown )
 {
 	RemoveInvalidInstances();
 
-	auto it = m_instances.begin();
-
-	while( it != m_instances.end() )
+	// Sync
+	if(false)
 	{
-		auto instance = *it;
+		auto it = m_instances.begin();
 
-		if( instance->m_State == INSTANCE_STATE_ACTIVE )
+		while (it != m_instances.end())
 		{
-			// 更新処理
-			instance->Update( deltaFrame, shown );
+			auto instance = *it;
 
-			// 破棄チェック
-			if( instance->m_State != INSTANCE_STATE_ACTIVE )
+			if (instance->m_State == INSTANCE_STATE_ACTIVE)
 			{
-				it = m_instances.erase( it );
-				m_removingInstances.push_back( instance );
-			}
-			else
-			{
-				it++;
+				// 更新処理
+				instance->Update(deltaFrame, shown);
+
+				// 破棄チェック
+				if (instance->m_State != INSTANCE_STATE_ACTIVE)
+				{
+					it = m_instances.erase(it);
+					m_removingInstances.push_back(instance);
+				}
+				else
+				{
+					it++;
+				}
 			}
 		}
 	}
+	else
+	{
+		std::array<IntrusiveList<Instance>::Iterator, 8> its_begin;
+		std::array<IntrusiveList<Instance>::Iterator, 8> its_end;
+
+		auto size = m_instances.size() / 8;
+		
+		auto it = m_instances.begin();
+
+		for (int32_t tnum = 0; tnum < 8; tnum++)
+		{
+			its_begin[tnum] = it;
+
+			for (int32_t i = 0; i < size; i++)
+			{
+				it++;
+			}
+
+			its_end[tnum] = it;
+		}
+
+		its_end[7] = m_instances.end();
+
+		it = m_instances.begin();
+
+		while (it != m_instances.end())
+		{
+			auto instance = *it;
+
+			if (instance->m_State == INSTANCE_STATE_ACTIVE)
+			{
+				instance->StartToUpdateAsync(deltaFrame, shown);
+			}
+
+			it++;
+		}
+
+		auto m = (ManagerImplemented*)this->m_manager;
+		for (int32_t i = 0; i < 8; i++)
+		{
+			auto ind = i;
+			m->GetInternalThreadPool()->PushTask([&, ind] {
+			
+				auto it_ = its_begin[ind];
+
+				while (it_ != its_end[ind])
+				{
+					auto instance = *it_;
+
+					if (instance->m_State == INSTANCE_STATE_ACTIVE)
+					{
+						instance->UpdateAsync(deltaFrame, shown);
+					}
+
+					it_++;
+				}
+			});
+		}
+
+		m->GetInternalThreadPool()->WaitAll();
+		//Sleep(10);
+
+		it = m_instances.begin();
+
+		while (it != m_instances.end())
+		{
+			auto instance = *it;
+
+			if (instance->m_State == INSTANCE_STATE_ACTIVE)
+			{
+				instance->FinishToUpdateAsync(instance->m_LivingTime - deltaFrame, deltaFrame, shown);
+
+				if (instance->m_State != INSTANCE_STATE_ACTIVE)
+				{
+					it = m_instances.erase(it);
+					m_removingInstances.push_back(instance);
+				}
+				else
+				{
+					it++;
+				}
+			}
+		}
+	}
+
 
 	m_time++;
 }

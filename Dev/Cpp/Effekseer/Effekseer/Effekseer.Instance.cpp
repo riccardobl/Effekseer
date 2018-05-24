@@ -830,6 +830,192 @@ void Instance::Update( float deltaFrame, bool shown )
 	m_stepTime = true;
 }
 
+void Instance::StartToUpdateAsync(float deltaFrame, bool shown)
+{
+	// Invalidate matrix
+	m_GlobalMatrix43Calculated = false;
+	m_ParentMatrix43Calculated = false;
+
+	auto instanceGlobal = this->m_pContainer->GetRootInstance();
+
+	if (m_stepTime && m_pEffectNode->GetType() != EFFECT_NODE_TYPE_ROOT)
+	{
+		/* 音の更新(現状放置) */
+		if (m_pEffectNode->SoundType == ParameterSoundType_Use)
+		{
+			float living_time = m_LivingTime;
+			float living_time_p = living_time + deltaFrame;
+
+			if (living_time <= (float)soundValues.delay && (float)soundValues.delay < living_time_p)
+			{
+				m_pEffectNode->PlaySound_(*this, m_pContainer->GetRootInstance(), m_pManager);
+			}
+		}
+	}
+}
+
+void Instance::UpdateAsync(float deltaFrame, bool shown)
+{
+	assert(this->m_pContainer != nullptr);
+
+	float originalTime = m_LivingTime;
+
+	if (shown)
+	{
+		CalculateMatrix(deltaFrame);
+	}
+	else if (m_pEffectNode->LocationAbs.type != LocationAbsType::None)
+	{
+		// If attraction forces are not default, updating is needed in each frame.
+		CalculateMatrix(deltaFrame);
+	}
+
+	// Get parent color.
+	if (m_pParent != NULL)
+	{
+		if (m_pEffectNode->RendererCommon.ColorBindType == BindType::Always)
+		{
+			ColorParent = m_pParent->ColorInheritance;
+		}
+	}
+
+	/* 親の削除処理 */
+	if (m_pParent != NULL && m_pParent->GetState() != INSTANCE_STATE_ACTIVE)
+	{
+		CalculateParentMatrix(deltaFrame);
+		m_pParent = nullptr;
+	}
+
+	/* 時間の進行 */
+	if (m_stepTime)
+	{
+		m_LivingTime += deltaFrame;
+	}
+}
+
+void Instance::FinishToUpdateAsync(float originalTime, float deltaFrame, bool shown)
+{
+	auto instanceGlobal = this->m_pContainer->GetRootInstance();
+
+	// 子の処理
+	if (m_stepTime && (originalTime <= m_LivedTime || !m_pEffectNode->CommonValues.RemoveWhenLifeIsExtinct))
+	{
+		InstanceGroup* group = m_headGroups;
+
+		for (int i = 0; i < m_pEffectNode->GetChildrenCount(); i++, group = group->NextUsedByInstance)
+		{
+			auto pNode = (EffectNodeImplemented*)m_pEffectNode->GetChild(i);
+			auto pContainer = m_pContainer->GetChild(i);
+			assert(group != NULL);
+
+			// Create a particle
+			while (true)
+			{
+				if (pNode->CommonValues.MaxGeneration > m_generatedChildrenCount[i] &&
+					originalTime + deltaFrame >= m_nextGenerationTime[i])
+				{
+					// 生成処理
+					Instance* pNewInstance = group->CreateInstance();
+					if (pNewInstance != NULL)
+					{
+						pNewInstance->Initialize(this, m_generatedChildrenCount[i]);
+					}
+					else
+					{
+						break;
+					}
+
+					m_generatedChildrenCount[i]++;
+					m_nextGenerationTime[i] += Max(0.0f, pNode->CommonValues.GenerationTime.getValue(*instanceGlobal));
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	// 死亡判定
+	bool killed = false;
+	if (m_pEffectNode->GetType() != EFFECT_NODE_TYPE_ROOT)
+	{
+		// 時間経過
+		if (m_pEffectNode->CommonValues.RemoveWhenLifeIsExtinct)
+		{
+			if (m_LivingTime > m_LivedTime)
+			{
+				killed = true;
+			}
+		}
+
+		// 親が消えた場合
+		if (m_pEffectNode->CommonValues.RemoveWhenParentIsRemoved)
+		{
+			if (m_pParent == nullptr || m_pParent->GetState() != INSTANCE_STATE_ACTIVE)
+			{
+				m_pParent = nullptr;
+				killed = true;
+			}
+		}
+
+		// 子が全て消えた場合
+		if (!killed && m_pEffectNode->CommonValues.RemoveWhenChildrenIsExtinct)
+		{
+			int maxcreate_count = 0;
+			InstanceGroup* group = m_headGroups;
+
+			for (int i = 0; i < m_pEffectNode->GetChildrenCount(); i++, group = group->NextUsedByInstance)
+			{
+				auto child = (EffectNodeImplemented*)m_pEffectNode->GetChild(i);
+
+				float last_generation_time =
+					child->CommonValues.GenerationTime.max *
+					(child->CommonValues.MaxGeneration - 1) +
+					child->CommonValues.GenerationTimeOffset.max +
+					1.0f;
+
+				if (m_LivingTime >= last_generation_time && group->GetInstanceCount() == 0)
+				{
+					maxcreate_count++;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			if (maxcreate_count == m_pEffectNode->GetChildrenCount())
+			{
+				killed = true;
+			}
+		}
+	}
+
+	if (killed)
+	{
+		/* 死亡確定時、計算が必要な場合は計算をする。*/
+		if (m_pEffectNode->GetChildrenCount() > 0)
+		{
+			// Get parent color.
+			if (m_pParent != NULL)
+			{
+				if (m_pEffectNode->RendererCommon.ColorBindType == BindType::Always)
+				{
+					ColorParent = m_pParent->ColorInheritance;
+				}
+			}
+		}
+
+		// Delete this particle with myself.
+		Kill();
+		return;
+	}
+
+	// 時間の進行許可
+	m_stepTime = true;
+}
+
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------

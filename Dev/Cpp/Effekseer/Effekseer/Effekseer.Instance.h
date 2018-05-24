@@ -285,6 +285,15 @@ public:
 	*/
 	void Update( float deltaFrame, bool shown );
 
+	void StartToUpdateAsync(float deltaFrame, bool shown);
+
+	/**
+		@brief	Update async in instances
+	*/
+	void UpdateAsync(float deltaFrame, bool shown);
+
+	void FinishToUpdateAsync(float originalTime, float deltaFrame, bool shown);
+
 	/**
 		@brief	描画
 	*/

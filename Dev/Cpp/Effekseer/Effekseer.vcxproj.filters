@@ -199,6 +199,9 @@
     <ClInclude Include="Effekseer\Effekseer.IntrusiveList.h">
       <Filter>Effekseer\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Effekseer\Effekseer.ThreadPool.h">
+      <Filter>Effekseer\Thread</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Effekseer\Effekseer.Manager.cpp">
@@ -308,6 +311,9 @@
     </ClCompile>
     <ClCompile Include="Effekseer\Effekseer.IntrusiveList.cpp">
       <Filter>Effekseer\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Effekseer\Effekseer.ThreadPool.cpp">
+      <Filter>Effekseer\Thread</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

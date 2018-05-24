@@ -203,6 +203,7 @@
     <ClInclude Include="Effekseer\Effekseer.SoundLoader.h" />
     <ClInclude Include="Effekseer\Effekseer.TextureLoader.h" />
     <ClInclude Include="Effekseer\Effekseer.Thread.h" />
+    <ClInclude Include="Effekseer\Effekseer.ThreadPool.h" />
     <ClInclude Include="Effekseer\Effekseer.Vector2D.h" />
     <ClInclude Include="Effekseer\Effekseer.Vector3D.h" />
     <ClInclude Include="Effekseer\Renderer\Effekseer.ModelRenderer.h" />
@@ -248,6 +249,7 @@
     <ClCompile Include="Effekseer\Effekseer.Server.cpp" />
     <ClCompile Include="Effekseer\Effekseer.Socket.cpp" />
     <ClCompile Include="Effekseer\Effekseer.Thread.cpp" />
+    <ClCompile Include="Effekseer\Effekseer.ThreadPool.cpp" />
     <ClCompile Include="Effekseer\Effekseer.Vector2D.cpp" />
     <ClCompile Include="Effekseer\Effekseer.Vector3D.cpp" />
   </ItemGroup>

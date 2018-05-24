@@ -349,6 +349,9 @@ ManagerImplemented::ManagerImplemented( int instance_max, bool autoFlip )
 
 	m_setting->SetEffectLoader(new DefaultEffectLoader());
 	EffekseerPrintDebug("*** Create : Manager\n");
+
+	EffekseerPrintDebug("*** Start : ThreadPool\n");
+	m_threadPool.Initialize(8);
 }
 
 //----------------------------------------------------------------------------------
@@ -356,6 +359,8 @@ ManagerImplemented::ManagerImplemented( int instance_max, bool autoFlip )
 //----------------------------------------------------------------------------------
 ManagerImplemented::~ManagerImplemented()
 {
+	m_threadPool.WaitAll();
+
 	StopAllEffects();
 
 	ExecuteEvents();
@@ -1820,6 +1825,11 @@ void ManagerImplemented::RessignCulling()
 	m_culledObjectSets.clear();
 
 	m_cullingWorld->Reassign();
+}
+
+ThreadPool* ManagerImplemented::GetInternalThreadPool()
+{
+	return &m_threadPool;
 }
 
 //----------------------------------------------------------------------------------
