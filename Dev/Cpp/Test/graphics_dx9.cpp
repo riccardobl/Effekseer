@@ -113,7 +113,7 @@ void InitGraphics(int width, int height )
 		g_d3d_clearing_image->UnlockRect();
 	}
 
-	g_renderer = ::EffekseerRendererDX9::Renderer::Create( g_d3d_device, 2000 );
+	g_renderer = ::EffekseerRendererDX9::Renderer::Create( g_d3d_device, 20000 );
 	g_renderer->SetProjectionMatrix( ::Effekseer::Matrix44().PerspectiveFovRH( 90.0f / 180.0f * 3.14f, (float)width / (float)height, 1.0f, 50.0f ) );
 	g_renderer->SetDistortingCallback( new DistortingCallback( 
 		(EffekseerRendererDX9::Renderer*)g_renderer, g_d3d_device, width, height ) );

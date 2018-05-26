@@ -8,11 +8,13 @@
 #include "../EffekseerSoundXAudio2/EffekseerSoundXAudio2.h"
 #include "sound.h"
 
+/*
 #if _DEBUG
 #pragma comment(lib, "x86/EffekseerSoundXAudio2.Debug.lib" )
 #else
 #pragma comment(lib, "x86/EffekseerSoundXAudio2.Release.lib" )
 #endif
+*/
 
 //----------------------------------------------------------------------------------
 //
@@ -27,6 +29,7 @@ extern ::Effekseer::Manager*	g_manager;
 //----------------------------------------------------------------------------------
 void InitSound()
 {
+	/*
 	HRESULT hr;
 	
 	hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -37,6 +40,7 @@ void InitSound()
 	
 	g_manager->SetSoundPlayer( g_sound->CreateSoundPlayer() );
 	g_manager->SetSoundLoader( g_sound->CreateSoundLoader() );
+	*/
 }
 
 //----------------------------------------------------------------------------------
@@ -44,6 +48,7 @@ void InitSound()
 //----------------------------------------------------------------------------------
 void TermSound()
 {
+	/*
 	g_xaudio2->StopEngine();
 
 	if( g_sound != NULL )
@@ -62,6 +67,7 @@ void TermSound()
 		g_xaudio2 = NULL;
 	}
 	CoUninitialize();
+	*/
 }
 
 //----------------------------------------------------------------------------------

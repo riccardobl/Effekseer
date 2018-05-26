@@ -27,8 +27,8 @@
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-#define __NormalMode 1
-#define __PerformanceCheckMode 0
+#define __NormalMode 0
+#define __PerformanceCheckMode 1
 
 #define __DDS_TEST 0
 
@@ -90,7 +90,7 @@ static efstring ToEFString(const wchar_t* src)
 //----------------------------------------------------------------------------------
 int main()
 {
-	g_manager = ::Effekseer::Manager::Create( 2000 );
+	g_manager = ::Effekseer::Manager::Create( 20000 );
 
 #if __CULLING_TEST
 	g_manager->CreateCullingWorld(200, 200, 200, 4);
@@ -203,12 +203,12 @@ void PlayEffect()
 #endif
 
 #if __PerformanceCheckMode
-	
+	static int target = 0;
 	for( float y = -10.0f; y <= 10.0f; y += 2.0f )
 	{
 		for( float x = -10.0f; x <= 10.0f; x += 2.0f )
 		{
-			auto handle = g_manager->Play( g_effect, x, y, 0 );
+			auto handle = g_manager->Play(g_effects[target], x, y, 0 );
 			//g_manager->SetShown( handle, false );
 		}
 	}
