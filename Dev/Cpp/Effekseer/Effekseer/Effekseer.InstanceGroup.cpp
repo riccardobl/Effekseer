@@ -138,7 +138,7 @@ void InstanceGroup::Update( float deltaFrame, bool shown )
 	RemoveInvalidInstances();
 
 	// Sync
-	if(false)
+	if(true)
 	{
 		auto it = m_instances.begin();
 

@@ -351,7 +351,7 @@ ManagerImplemented::ManagerImplemented( int instance_max, bool autoFlip )
 	EffekseerPrintDebug("*** Create : Manager\n");
 
 	EffekseerPrintDebug("*** Start : ThreadPool\n");
-	m_threadPool.Initialize(8);
+	m_threadPool.Initialize(4);
 }
 
 //----------------------------------------------------------------------------------
@@ -386,11 +386,13 @@ ManagerImplemented::~ManagerImplemented()
 	ES_SAFE_RELEASE( m_setting );
 }
 
+
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
 void ManagerImplemented::PushInstance( Instance* instance )
 {
+	std::lock_guard<std::mutex> lock(memoryMutex);
 	m_reserved_instances.push( instance );
 }
 
@@ -399,6 +401,8 @@ void ManagerImplemented::PushInstance( Instance* instance )
 //----------------------------------------------------------------------------------
 Instance* ManagerImplemented::PopInstance()
 {
+	std::lock_guard<std::mutex> lock(memoryMutex);
+
 	if( m_reserved_instances.empty() )
 	{
 		return NULL;
@@ -1330,6 +1334,8 @@ void ManagerImplemented::Update( float deltaFrame )
 		UpdateHandle( drawSet, deltaFrame );
 	}
 
+	GetInternalThreadPool()->WaitAll();
+
 	// 経過時間を計算
 	m_updateTime = (int)(Effekseer::GetTime() - beginTime);
 
@@ -1378,16 +1384,20 @@ void ManagerImplemented::UpdateHandle( Handle handle, float deltaFrame )
 //----------------------------------------------------------------------------------
 void ManagerImplemented::UpdateHandle( DrawSet& drawSet, float deltaFrame )
 {
-	float df = drawSet.IsPaused ? 0 : deltaFrame * drawSet.Speed;
+	auto ds = drawSet;
 
-	drawSet.InstanceContainerPointer->Update( true, df, drawSet.IsShown );
+	GetInternalThreadPool()->PushTask([&, ds] {
+		float df = ds.IsPaused ? 0 : deltaFrame * ds.Speed;
 
-	if( drawSet.DoUseBaseMatrix )
-	{
-		drawSet.InstanceContainerPointer->SetBaseMatrix( true, drawSet.BaseMatrix );
-	}
+		ds.InstanceContainerPointer->Update(true, df, ds.IsShown);
 
-	drawSet.GlobalPointer->AddUpdatedFrame( df );
+		if (ds.DoUseBaseMatrix)
+		{
+			ds.InstanceContainerPointer->SetBaseMatrix(true, ds.BaseMatrix);
+		}
+
+		ds.GlobalPointer->AddUpdatedFrame(df);
+	});
 }
 
 //----------------------------------------------------------------------------------

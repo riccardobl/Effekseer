@@ -198,6 +198,9 @@ private:
 	//! internal thread pool
 	ThreadPool	m_threadPool;
 
+	//! mutex for memory control
+	std::mutex memoryMutex;
+
 	// 描画オブジェクト追加
 	Handle AddDrawSet( Effect* effect, InstanceContainer* pInstanceContainer, InstanceGlobal* pGlobalPointer );
 
