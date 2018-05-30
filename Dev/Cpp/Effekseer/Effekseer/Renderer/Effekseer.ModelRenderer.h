@@ -58,6 +58,8 @@ public:
 		int32_t			Time;
 	};
 
+	bool IsAsyncSupported = false;
+
 public:
 	ModelRenderer() {}
 

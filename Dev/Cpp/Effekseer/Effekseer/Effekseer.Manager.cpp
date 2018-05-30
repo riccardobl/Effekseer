@@ -1385,9 +1385,10 @@ void ManagerImplemented::UpdateHandle( Handle handle, float deltaFrame )
 void ManagerImplemented::UpdateHandle( DrawSet& drawSet, float deltaFrame )
 {
 	auto ds = drawSet;
+	auto deltaFrame_ = deltaFrame;
 
-	GetInternalThreadPool()->PushTask([&, ds] {
-		float df = ds.IsPaused ? 0 : deltaFrame * ds.Speed;
+	//GetInternalThreadPool()->PushTask([&, ds, deltaFrame_] {
+		float df = ds.IsPaused ? 0 : deltaFrame_ * ds.Speed;
 
 		ds.InstanceContainerPointer->Update(true, df, ds.IsShown);
 
@@ -1397,7 +1398,7 @@ void ManagerImplemented::UpdateHandle( DrawSet& drawSet, float deltaFrame )
 		}
 
 		ds.GlobalPointer->AddUpdatedFrame(df);
-	});
+	//});
 }
 
 //----------------------------------------------------------------------------------

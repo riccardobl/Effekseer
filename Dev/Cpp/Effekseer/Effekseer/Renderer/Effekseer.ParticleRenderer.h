@@ -41,6 +41,8 @@ public:
 		Color		ParticleColor;
 	};
 
+	bool IsAsyncSupported = false;
+
 public:
 	ParticleRenderer() {}
 

@@ -59,6 +59,8 @@ public:
 		RectF	UV;
 	};
 
+	bool IsAsyncSupported = false;
+
 public:
 	RingRenderer() {}
 

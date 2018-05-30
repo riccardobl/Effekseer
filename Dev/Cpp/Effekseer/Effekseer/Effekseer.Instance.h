@@ -210,6 +210,9 @@ public:
 	// 生成されてからの時間
 	float		m_LivingTime;
 
+	//! time from generated for async.
+	float		m_LivingTimeTemp;
+
 	// The time offset for UV
 	int32_t		uvTimeOffset;
 
@@ -285,19 +288,24 @@ public:
 	*/
 	void Update( float deltaFrame, bool shown );
 
-	void StartToUpdateAsync(float deltaFrame, bool shown);
+	void StartUpdateAsync(float deltaFrame, bool shown);
 
 	/**
 		@brief	Update async in instances
 	*/
 	void UpdateAsync(float deltaFrame, bool shown);
 
-	void FinishToUpdateAsync(float originalTime, float deltaFrame, bool shown);
+	void EndUpdateAsync(float deltaFrame, bool shown);
 
 	/**
-		@brief	描画
+		@brief	Draw an instance
 	*/
 	void Draw();
+
+	/**
+	@brief	Draw an instance async
+	*/
+	void DrawAsync(int32_t idex);
 
 	/**
 		@brief	破棄

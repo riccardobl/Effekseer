@@ -247,6 +247,67 @@ void EffectNodeRibbon::Rendering(const Instance& instance, Manager* manager)
 	}
 }
 
+void EffectNodeRibbon::RenderingAsync(const Instance& instance, int32_t index, Manager* manager)
+{
+	const InstanceValues& instValues = instance.rendererValues.ribbon;
+	RibbonRenderer* renderer = manager->GetRibbonRenderer();
+	if (renderer != NULL)
+	{
+		Color _color;
+		if (RendererCommon.ColorBindType == BindType::Always || RendererCommon.ColorBindType == BindType::WhenCreating)
+		{
+			_color = Color::Mul(instValues._original, instance.ColorParent);
+		}
+		else
+		{
+			_color = instValues._original;
+		}
+
+		auto instParam = m_instanceParameter;
+
+		instParam.AllColor = _color;
+		instParam.SRTMatrix43 = instance.GetGlobalMatrix43();
+
+		Color color_l = _color;
+		Color color_r = _color;
+
+		if (RibbonColor.type == RibbonColorParameter::Default)
+		{
+
+		}
+		else if (RibbonColor.type == RibbonColorParameter::Fixed)
+		{
+			color_l = Color::Mul(color_l, RibbonColor.fixed.l);
+			color_r = Color::Mul(color_r, RibbonColor.fixed.r);
+		}
+
+		instParam.Colors[0] = color_l;
+		instParam.Colors[1] = color_r;
+
+		// Apply global Color
+		if (instance.m_pContainer->GetRootInstance()->IsGlobalColorSet)
+		{
+			instParam.Colors[0] = Color::Mul(m_instanceParameter.Colors[0], instance.m_pContainer->GetRootInstance()->GlobalColor);
+			instParam.Colors[1] = Color::Mul(m_instanceParameter.Colors[1], instance.m_pContainer->GetRootInstance()->GlobalColor);
+		}
+
+		if (RibbonPosition.type == RibbonPositionParameter::Default)
+		{
+			instParam.Positions[0] = -0.5f;
+			instParam.Positions[1] = 0.5f;
+		}
+		else if (RibbonPosition.type == RibbonPositionParameter::Fixed)
+		{
+			instParam.Positions[0] = RibbonPosition.fixed.l;
+			instParam.Positions[1] = RibbonPosition.fixed.r;
+		}
+
+		instParam.InstanceIndex = index;
+
+		renderer->Rendering(m_nodeParameter, instParam, m_userData);
+	}
+}
+
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------

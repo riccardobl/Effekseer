@@ -34,7 +34,7 @@ class SpriteRendererBase
 {
 protected:
 	RENDERER*						m_renderer;
-	int32_t							m_spriteCount;
+	std::atomic_int					m_spriteCount;
 	int32_t							m_ringBufferOffset;
 	uint8_t*						m_ringBufferData;
 
@@ -125,9 +125,10 @@ protected:
 	{
 		if( m_ringBufferData == NULL ) return;
 		
-		VERTEX* verteies = (VERTEX*)m_ringBufferData;
-		m_ringBufferData += (sizeof(VERTEX) * 4);
-	
+		VERTEX* verteies = (VERTEX*)(m_ringBufferData) + instanceParameter.InstanceIndex * 4;
+		//VERTEX* verteies = (VERTEX*)(m_ringBufferData);
+		//m_ringBufferData += (sizeof(VERTEX)) * 4;
+
 		for( int i = 0; i < 4; i++ )
 		{
 			verteies[i].Pos.X = instanceParameter.Positions[i].X;
@@ -299,8 +300,6 @@ protected:
 				}
 			}
 		}
-		
-		m_spriteCount++;
 	}
 
 	void EndRendering_(RENDERER* renderer, const efkSpriteNodeParam& param)
@@ -357,7 +356,10 @@ public:
 
 	void Rendering(const efkSpriteNodeParam& parameter, const efkSpriteInstanceParam& instanceParameter, void* userData) override
 	{
-		if (m_spriteCount == m_renderer->GetSquareMaxCount()) return;
+		// avoid overrun for async
+		m_spriteCount++;
+		if (m_spriteCount > m_renderer->GetSquareMaxCount()) return;
+
 		Rendering_(parameter, instanceParameter, userData, m_renderer->GetCameraMatrix());
 	}
 

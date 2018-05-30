@@ -19,8 +19,6 @@ private:
 	std::vector<std::thread> threads;
 	std::queue<std::function<void()>> tasks;
 	
-	std::mutex ext_mutex;
-
 	std::mutex task_mutex;
 	std::condition_variable task_cv;
 

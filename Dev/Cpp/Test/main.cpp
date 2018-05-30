@@ -206,9 +206,9 @@ void PlayEffect()
 	static int target = 0;
 	for( float y = -10.0f; y <= 10.0f; y += 2.0f )
 	{
-		for( float x = -10.0f; x <= 10.0f; x += 2.0f )
+		for (float x = -10.0f; x <= 10.0f; x += 2.0f)
 		{
-			auto handle = g_manager->Play(g_effects[target], x, y, 0 );
+			auto handle = g_manager->Play(g_effects[target], x, y, 0);
 			//g_manager->SetShown( handle, false );
 		}
 	}

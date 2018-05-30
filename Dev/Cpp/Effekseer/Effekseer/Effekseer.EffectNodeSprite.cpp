@@ -167,16 +167,15 @@ void EffectNodeSprite::BeginRendering(int32_t count, Manager* manager)
 
 		renderer->BeginRendering( nodeParameter, count, m_userData );
 	}
+
+	instanceCounter = 0;
 }
 
-//----------------------------------------------------------------------------------
-//
-//----------------------------------------------------------------------------------
-void EffectNodeSprite::Rendering(const Instance& instance, Manager* manager)
+void EffectNodeSprite::RenderingInternal(const Instance& instance, int32_t instanceIndex, Manager* manager)
 {
 	const InstanceValues& instValues = instance.rendererValues.sprite;
 	SpriteRenderer* renderer = manager->GetSpriteRenderer();
-	if( renderer != NULL )
+	if (renderer != NULL)
 	{
 		SpriteRenderer::NodeParameter nodeParameter;
 		nodeParameter.AlphaBlend = AlphaBlend;
@@ -220,22 +219,22 @@ void EffectNodeSprite::Rendering(const Instance& instance, Manager* manager)
 		Color color_ul = _color;
 		Color color_ur = _color;
 
-		if( SpriteColor.type == SpriteColorParameter::Default )
+		if (SpriteColor.type == SpriteColorParameter::Default)
 		{
 		}
-		else if( SpriteColor.type == SpriteColorParameter::Fixed )
+		else if (SpriteColor.type == SpriteColorParameter::Fixed)
 		{
-			color_ll = Color::Mul( color_ll, SpriteColor.fixed.ll );
-			color_lr = Color::Mul( color_lr, SpriteColor.fixed.lr );
-			color_ul = Color::Mul( color_ul, SpriteColor.fixed.ul );
-			color_ur = Color::Mul( color_ur, SpriteColor.fixed.ur );
+			color_ll = Color::Mul(color_ll, SpriteColor.fixed.ll);
+			color_lr = Color::Mul(color_lr, SpriteColor.fixed.lr);
+			color_ul = Color::Mul(color_ul, SpriteColor.fixed.ul);
+			color_ur = Color::Mul(color_ur, SpriteColor.fixed.ur);
 		}
 
 		instanceParameter.Colors[0] = color_ll;
 		instanceParameter.Colors[1] = color_lr;
 		instanceParameter.Colors[2] = color_ul;
 		instanceParameter.Colors[3] = color_ur;
-		
+
 		// Apply global Color
 		if (instance.m_pContainer->GetRootInstance()->IsGlobalColorSet)
 		{
@@ -245,7 +244,7 @@ void EffectNodeSprite::Rendering(const Instance& instance, Manager* manager)
 			instanceParameter.Colors[3] = Color::Mul(instanceParameter.Colors[3], instance.m_pContainer->GetRootInstance()->GlobalColor);
 		}
 
-		if( SpritePosition.type == SpritePosition.Default )
+		if (SpritePosition.type == SpritePosition.Default)
 		{
 			instanceParameter.Positions[0].X = -0.5f;
 			instanceParameter.Positions[0].Y = -0.5f;
@@ -256,17 +255,31 @@ void EffectNodeSprite::Rendering(const Instance& instance, Manager* manager)
 			instanceParameter.Positions[3].X = 0.5f;
 			instanceParameter.Positions[3].Y = 0.5f;
 		}
-		else if( SpritePosition.type == SpritePosition.Fixed )
+		else if (SpritePosition.type == SpritePosition.Fixed)
 		{
-			SpritePosition.fixed.ll.setValueToArg( instanceParameter.Positions[0] );
-			SpritePosition.fixed.lr.setValueToArg( instanceParameter.Positions[1] );
-			SpritePosition.fixed.ul.setValueToArg( instanceParameter.Positions[2] );
-			SpritePosition.fixed.ur.setValueToArg( instanceParameter.Positions[3] );
+			SpritePosition.fixed.ll.setValueToArg(instanceParameter.Positions[0]);
+			SpritePosition.fixed.lr.setValueToArg(instanceParameter.Positions[1]);
+			SpritePosition.fixed.ul.setValueToArg(instanceParameter.Positions[2]);
+			SpritePosition.fixed.ur.setValueToArg(instanceParameter.Positions[3]);
 		}
 
 		instanceParameter.UV = instance.GetUV();
-		renderer->Rendering( nodeParameter, instanceParameter, m_userData );
+
+		instanceParameter.InstanceIndex = instanceIndex;
+
+		renderer->Rendering(nodeParameter, instanceParameter, m_userData);
 	}
+}
+
+void EffectNodeSprite::Rendering(const Instance& instance, Manager* manager)
+{
+	RenderingInternal(instance, instanceCounter, manager);
+	instanceCounter++;
+}
+
+void EffectNodeSprite::RenderingAsync(const Instance& instance, int32_t index, Manager* manager)
+{
+	RenderingInternal(instance, index, manager);
 }
 
 //----------------------------------------------------------------------------------

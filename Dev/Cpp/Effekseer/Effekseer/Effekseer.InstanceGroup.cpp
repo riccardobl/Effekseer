@@ -133,61 +133,87 @@ int InstanceGroup::GetRemovingInstanceCount() const
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-void InstanceGroup::Update( float deltaFrame, bool shown )
+void InstanceGroup::Update(float deltaFrame, bool shown)
 {
 	RemoveInvalidInstances();
 
-	// Sync
-	if(true)
+	auto it = m_instances.begin();
+
+	while (it != m_instances.end())
 	{
-		auto it = m_instances.begin();
+		auto instance = *it;
 
-		while (it != m_instances.end())
+		if (instance->m_State == INSTANCE_STATE_ACTIVE)
 		{
-			auto instance = *it;
+			// 更新処理
+			instance->Update(deltaFrame, shown);
 
-			if (instance->m_State == INSTANCE_STATE_ACTIVE)
+			// 破棄チェック
+			if (instance->m_State != INSTANCE_STATE_ACTIVE)
 			{
-				// 更新処理
-				instance->Update(deltaFrame, shown);
-
-				// 破棄チェック
-				if (instance->m_State != INSTANCE_STATE_ACTIVE)
-				{
-					it = m_instances.erase(it);
-					m_removingInstances.push_back(instance);
-				}
-				else
-				{
-					it++;
-				}
+				it = m_instances.erase(it);
+				m_removingInstances.push_back(instance);
 			}
-		}
-	}
-	else
-	{
-		std::array<IntrusiveList<Instance>::Iterator, 4> its_begin;
-		std::array<IntrusiveList<Instance>::Iterator, 4> its_end;
-
-		auto size = m_instances.size() / 4;
-		
-		auto it = m_instances.begin();
-
-		for (int32_t tnum = 0; tnum < 4; tnum++)
-		{
-			its_begin[tnum] = it;
-
-			for (int32_t i = 0; i < size; i++)
+			else
 			{
 				it++;
 			}
+		}
+	}
 
-			its_end[tnum] = it;
+	m_time++;
+}
+
+void InstanceGroup::BeginUpdateAsync(float deltaFrame, bool shown)
+{
+	RemoveInvalidInstances();
+
+	auto it = m_instances.begin();
+
+	while (it != m_instances.end())
+	{
+		auto instance = *it;
+
+		if (instance->m_State == INSTANCE_STATE_ACTIVE)
+		{
+			instance->StartUpdateAsync(deltaFrame, shown);
 		}
 
-		its_end[3] = m_instances.end();
+		it++;
+	}
+}
 
-		it = m_instances.begin();
+void InstanceGroup::UpdateAsync(float deltaFrame, bool shown, int32_t offset, int32_t count)
+{
+	auto it = m_instances.begin();
+
+	for (int32_t i = 0; i < offset; i++)
+	{
+		if (it == m_instances.end()) break;
+		it++;
+	}
+
+	int32_t loop = 0;
+
+	while (it != m_instances.end() && loop < count)
+	{
+		auto instance = *it;
+
+		if (instance->m_State == INSTANCE_STATE_ACTIVE)
+		{
+			// 更新処理
+			instance->UpdateAsync(deltaFrame, shown);
+		}
+
+		it++;
+		loop++;
+	}
+}
+
+void InstanceGroup::EndUpdateAsync(float deltaFrame, bool shown)
+{
+	{
+		auto it = m_instances.begin();
 
 		while (it != m_instances.end())
 		{
@@ -195,60 +221,31 @@ void InstanceGroup::Update( float deltaFrame, bool shown )
 
 			if (instance->m_State == INSTANCE_STATE_ACTIVE)
 			{
-				instance->StartToUpdateAsync(deltaFrame, shown);
+				instance->EndUpdateAsync(deltaFrame, shown);
 			}
 
 			it++;
 		}
+	}
 
-		auto m = (ManagerImplemented*)this->m_manager;
-		for (int32_t i = 0; i < 4; i++)
-		{
-			auto ind = i;
-			m->GetInternalThreadPool()->PushTask([&, ind] {
-			
-				auto it_ = its_begin[ind];
-
-				while (it_ != its_end[ind])
-				{
-					auto instance = *it_;
-
-					if (instance->m_State == INSTANCE_STATE_ACTIVE)
-					{
-						instance->UpdateAsync(deltaFrame, shown);
-					}
-
-					it_++;
-				}
-			});
-		}
-
-		m->GetInternalThreadPool()->WaitAll();
-		//Sleep(10);
-
-		it = m_instances.begin();
+	{
+		auto it = m_instances.begin();
 
 		while (it != m_instances.end())
 		{
 			auto instance = *it;
 
-			if (instance->m_State == INSTANCE_STATE_ACTIVE)
+			if (instance->m_State != INSTANCE_STATE_ACTIVE)
 			{
-				instance->FinishToUpdateAsync(instance->m_LivingTime - deltaFrame, deltaFrame, shown);
-
-				if (instance->m_State != INSTANCE_STATE_ACTIVE)
-				{
-					it = m_instances.erase(it);
-					m_removingInstances.push_back(instance);
-				}
-				else
-				{
-					it++;
-				}
+				it = m_instances.erase(it);
+				m_removingInstances.push_back(instance);
+			}
+			else
+			{
+				it++;
 			}
 		}
 	}
-
 
 	m_time++;
 }

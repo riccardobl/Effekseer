@@ -122,6 +122,9 @@ public:
 		} positionValues;
 	};
 
+	//! counter for sync
+	int32_t	instanceCounter = 0;
+
 public:
 
 	AlphaBlendType		AlphaBlend;
@@ -143,7 +146,11 @@ public:
 
 	void BeginRendering(int32_t count, Manager* manager);
 
-	void Rendering(const Instance& instance, Manager* manager);
+	void RenderingInternal(const Instance& instance, int32_t instanceIndex, Manager* manager);
+
+	void Rendering(const Instance& instance, Manager* manager) override;
+
+	void RenderingAsync(const Instance& instance, int32_t index, Manager* manager) override;
 
 	void EndRendering(Manager* manager);
 

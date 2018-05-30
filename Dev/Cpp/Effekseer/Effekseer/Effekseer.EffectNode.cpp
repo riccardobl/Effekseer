@@ -682,16 +682,14 @@ void EffectNodeImplemented::EndRenderingGroup(InstanceGroup* group, Manager* man
 {
 }
 
-//----------------------------------------------------------------------------------
-//
-//----------------------------------------------------------------------------------
 void EffectNodeImplemented::Rendering(const Instance& instance, Manager* manager)
 {
 }
 
-//----------------------------------------------------------------------------------
-//
-//----------------------------------------------------------------------------------
+void EffectNodeImplemented::RenderingAsync(const Instance& instance, int32_t index, Manager* manager)
+{
+}
+
 void EffectNodeImplemented::EndRendering(Manager* manager)
 {
 }

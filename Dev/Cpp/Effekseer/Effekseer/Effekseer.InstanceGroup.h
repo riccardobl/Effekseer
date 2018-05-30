@@ -65,7 +65,13 @@ public:
 
 	int GetRemovingInstanceCount() const;
 
-	void Update( float deltaFrame, bool shown );
+	void Update( float deltaFrame, bool shown);
+
+	void BeginUpdateAsync(float deltaFrame, bool shown);
+
+	void UpdateAsync(float deltaFrame, bool shown, int32_t offset, int32_t count);
+
+	void EndUpdateAsync(float deltaFrame, bool shown);
 
 	void SetBaseMatrix( const Matrix43& mat );
 

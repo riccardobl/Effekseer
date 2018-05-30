@@ -23,9 +23,13 @@ void ThreadPool::ThreadFunc()
 		task();
 
 		{
-			std::lock_guard<std::mutex> lock(wait_mutex);
+			//std::lock_guard<std::mutex> lock(wait_mutex);
 			executing--;
-			wait_cv.notify_one();
+
+			if (executing == 0)
+			{
+				wait_cv.notify_one();
+			}
 		}
 	}
 }
@@ -81,6 +85,8 @@ void ThreadPool::WaitAll()
 			auto ret = executing == 0;
 			return ret;
 		});
+
+		lock.unlock();
 	}
 }
 

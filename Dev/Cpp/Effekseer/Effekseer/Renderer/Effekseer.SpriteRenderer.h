@@ -57,7 +57,10 @@ public:
 		Vector2D	Positions[4];
 
 		RectF	UV;
+		int32_t			InstanceIndex;
 	};
+
+	bool IsAsyncSupported = false;
 
 public:
 	SpriteRenderer() {}

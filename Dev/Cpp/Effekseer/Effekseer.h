@@ -2153,7 +2153,10 @@ public:
 		Vector2D	Positions[4];
 
 		RectF	UV;
+		int32_t			InstanceIndex;
 	};
+
+	bool IsAsyncSupported = false;
 
 public:
 	SpriteRenderer() {}
@@ -2227,6 +2230,8 @@ namespace Effekseer
 
 			RectF	UV;
 		};
+
+		bool IsAsyncSupported = false;
 
 	public:
 		RibbonRenderer() {}
@@ -2307,6 +2312,8 @@ public:
 		RectF	UV;
 	};
 
+	bool IsAsyncSupported = false;
+
 public:
 	RingRenderer() {}
 
@@ -2381,6 +2388,8 @@ public:
 		Color			AllColor;
 		int32_t			Time;
 	};
+
+	bool IsAsyncSupported = false;
 
 public:
 	ModelRenderer() {}
@@ -2465,6 +2474,7 @@ namespace Effekseer
 			RectF	UV;
 		};
 
+		bool IsAsyncSupported = false;
 	public:
 		TrackRenderer() {}
 

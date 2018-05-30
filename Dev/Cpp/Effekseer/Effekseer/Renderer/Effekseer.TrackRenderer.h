@@ -66,6 +66,7 @@ namespace Effekseer
 			RectF	UV;
 		};
 
+		bool IsAsyncSupported = false;
 	public:
 		TrackRenderer() {}
 

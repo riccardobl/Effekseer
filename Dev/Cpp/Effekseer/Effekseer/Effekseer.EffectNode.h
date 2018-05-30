@@ -906,6 +906,11 @@ public:
 	virtual void Rendering(const Instance& instance, Manager* manager);
 
 	/**
+	@brief	render an instance async
+	*/
+	virtual void RenderingAsync(const Instance& instance, int32_t index, Manager* manager);
+
+	/**
 	@brief	描画終了
 	*/
 	virtual void EndRendering(Manager* manager);

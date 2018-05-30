@@ -830,7 +830,7 @@ void Instance::Update( float deltaFrame, bool shown )
 	m_stepTime = true;
 }
 
-void Instance::StartToUpdateAsync(float deltaFrame, bool shown)
+void Instance::StartUpdateAsync(float deltaFrame, bool shown)
 {
 	// Invalidate matrix
 	m_GlobalMatrix43Calculated = false;
@@ -857,8 +857,6 @@ void Instance::StartToUpdateAsync(float deltaFrame, bool shown)
 void Instance::UpdateAsync(float deltaFrame, bool shown)
 {
 	assert(this->m_pContainer != nullptr);
-
-	float originalTime = m_LivingTime;
 
 	if (shown)
 	{
@@ -887,18 +885,19 @@ void Instance::UpdateAsync(float deltaFrame, bool shown)
 	}
 
 	/* 時間の進行 */
+	m_LivingTimeTemp = m_LivingTime;
 	if (m_stepTime)
 	{
 		m_LivingTime += deltaFrame;
 	}
 }
 
-void Instance::FinishToUpdateAsync(float originalTime, float deltaFrame, bool shown)
+void Instance::EndUpdateAsync(float deltaFrame, bool shown)
 {
 	auto instanceGlobal = this->m_pContainer->GetRootInstance();
 
 	// 子の処理
-	if (m_stepTime && (originalTime <= m_LivedTime || !m_pEffectNode->CommonValues.RemoveWhenLifeIsExtinct))
+	if (m_stepTime && (m_LivingTimeTemp <= m_LivedTime || !m_pEffectNode->CommonValues.RemoveWhenLifeIsExtinct))
 	{
 		InstanceGroup* group = m_headGroups;
 
@@ -912,7 +911,7 @@ void Instance::FinishToUpdateAsync(float originalTime, float deltaFrame, bool sh
 			while (true)
 			{
 				if (pNode->CommonValues.MaxGeneration > m_generatedChildrenCount[i] &&
-					originalTime + deltaFrame >= m_nextGenerationTime[i])
+					m_LivingTimeTemp + deltaFrame >= m_nextGenerationTime[i])
 				{
 					// 生成処理
 					Instance* pNewInstance = group->CreateInstance();
@@ -1430,9 +1429,6 @@ void Instance::ModifyMatrixFromLocationAbs( float deltaFrame )
 	Matrix43::Multiple( m_GlobalMatrix43, m_GlobalMatrix43, MatTraGlobal );
 }
 
-//----------------------------------------------------------------------------------
-//
-//----------------------------------------------------------------------------------
 void Instance::Draw()
 {
 	assert( m_pEffectNode != NULL );
@@ -1445,6 +1441,20 @@ void Instance::Draw()
 	}
 
 	m_pEffectNode->Rendering(*this, m_pManager);
+}
+
+void Instance::DrawAsync(int32_t index)
+{
+	assert(m_pEffectNode != NULL);
+
+	if (!m_pEffectNode->IsRendered) return;
+
+	if (m_sequenceNumber != ((ManagerImplemented*)m_pManager)->GetSequenceNumber())
+	{
+		CalculateMatrix(0);
+	}
+
+	m_pEffectNode->RenderingAsync(*this, index, m_pManager);
 }
 
 //----------------------------------------------------------------------------------

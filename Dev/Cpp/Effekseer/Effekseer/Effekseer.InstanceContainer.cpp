@@ -12,6 +12,7 @@
 #include "Effekseer.Effect.h"
 #include "Effekseer.EffectNode.h"
 
+#include "Effekseer.ManagerImplemented.h"
 #include "Renderer/Effekseer.SpriteRenderer.h"
 
 //----------------------------------------------------------------------------------
@@ -177,10 +178,73 @@ InstanceGroup* InstanceContainer::GetFirstGroup() const
 //----------------------------------------------------------------------------------
 void InstanceContainer::Update(bool recursive, float deltaFrame, bool shown)
 {
-	// 更新
-	for (InstanceGroup* group = m_headGroups; group != NULL; group = group->NextUsedByContainer)
+	// Update
+
+	int32_t instanceCount = 0;
+	for (auto group = m_headGroups; group != nullptr; group = group->NextUsedByContainer)
 	{
-		group->Update(deltaFrame, shown);
+		instanceCount += group->GetInstanceCount();
+	}
+
+	// Sync
+	if (instanceCount < 64)
+	{
+		for (InstanceGroup* group = m_headGroups; group != NULL; group = group->NextUsedByContainer)
+		{
+			group->Update(deltaFrame, shown);
+		}
+	}
+	else
+	{
+		int32_t threadCount = 4;
+
+		// Begin
+		for (auto group = m_headGroups; group != nullptr; group = group->NextUsedByContainer)
+		{
+			group->BeginUpdateAsync(deltaFrame, shown);
+		}
+
+		// Update
+		auto m = (ManagerImplemented*)this->m_pManager;
+		for (int32_t i = 0; i < threadCount; i++)
+		{
+			auto ind = i;
+			m->GetInternalThreadPool()->PushTask([this, instanceCount, threadCount, deltaFrame, shown, ind] {
+
+				int32_t current = 0;
+				int32_t startOffset = (instanceCount / threadCount) * ind;
+				int32_t endOffset = startOffset + (instanceCount / threadCount);
+
+				if (ind == threadCount - 1)
+				{
+					endOffset = instanceCount;
+				}
+
+				for (auto group = m_headGroups; group != nullptr; group = group->NextUsedByContainer)
+				{
+					if (current >= endOffset) break;
+					if (current + group->GetInstanceCount() <= startOffset)
+					{
+						current += group->GetInstanceCount();
+						continue;
+					}
+
+					auto length = (Min(endOffset,current + group->GetInstanceCount())) - startOffset;
+
+					group->UpdateAsync(deltaFrame, shown, startOffset - current, length);
+
+					current += length;
+					startOffset += length;
+				}
+			});
+		}
+		m->GetInternalThreadPool()->WaitAll();
+
+		// End
+		for (auto group = m_headGroups; group != nullptr; group = group->NextUsedByContainer)
+		{
+			group->EndUpdateAsync(deltaFrame, shown);
+		}
 	}
 
 	// 破棄
@@ -245,10 +309,12 @@ void InstanceContainer::RemoveForcibly(bool recursive)
 //----------------------------------------------------------------------------------
 void InstanceContainer::Draw(bool recursive)
 {
+	auto m = (ManagerImplemented*)this->m_pManager;
+
 	if (m_pEffectNode->GetType() != EFFECT_NODE_TYPE_ROOT && m_pEffectNode->GetType() != EFFECT_NODE_TYPE_NONE)
 	{
-		/* 個数計測 */
-		int32_t count = 0;
+		// calculate the number of instances
+		int32_t instanceCount = 0;
 		{
 			for (InstanceGroup* group = m_headGroups; group != NULL; group = group->NextUsedByContainer)
 			{
@@ -256,44 +322,99 @@ void InstanceContainer::Draw(bool recursive)
 				{
 					if (instance->m_State == INSTANCE_STATE_ACTIVE)
 					{
-						count++;
+						instanceCount++;
 					}
 				}
 			}
 		}
 
-		if (count > 0)
+		if (instanceCount > 0)
 		{
-			/* 描画 */
-			m_pEffectNode->BeginRendering(count, m_pManager);
+			// Draw instances
+
+			bool isAsync = false;
+			if (m_pEffectNode->GetType() == EFFECT_NODE_TYPE_SPRITE && m->GetSpriteRenderer() != nullptr) isAsync = m->GetSpriteRenderer()->IsAsyncSupported;
+
+			m_pEffectNode->BeginRendering(instanceCount, m_pManager);
 
 			for (InstanceGroup* group = m_headGroups; group != NULL; group = group->NextUsedByContainer)
 			{
 				m_pEffectNode->BeginRenderingGroup(group, m_pManager);
 
-				if (m_pEffectNode->RenderingOrder == RenderingOrder_FirstCreatedInstanceIsFirst)
+				if (isAsync)
 				{
-					for (auto instance : group->m_instances)
+					// Render with async
+					for (int32_t i = 0; i < 4; i++)
 					{
-						if (instance->m_State == INSTANCE_STATE_ACTIVE)
-						{
-							instance->Draw();
-						}
+						auto ind = i;
+						m->GetInternalThreadPool()->PushTask([&, this, ind] {
+							
+							if (m_pEffectNode->RenderingOrder == RenderingOrder_FirstCreatedInstanceIsFirst)
+							{
+								auto it = group->m_instances.begin();
+								auto index = ind;
+								for (int i = 0; i < ind; i++) it++;
+
+								while (it != group->m_instances.end())
+								{
+									if ((*it)->m_State == INSTANCE_STATE_ACTIVE)
+									{
+										(*it)->DrawAsync(index);
+									}
+									
+									for (int i = 0; i < 4; i++) it++;
+									index += 4;
+								}
+							}
+							else
+							{
+								auto it = group->m_instances.rbegin();
+								auto index = ind;
+								for (int i = 0; i < ind; i++) it++;
+
+								while (it != group->m_instances.rend())
+								{
+									if ((*it)->m_State == INSTANCE_STATE_ACTIVE)
+									{
+										(*it)->DrawAsync(index);
+									}
+
+									for (int i = 0; i < 4; i++) it++;
+									index += 4;
+								}
+							}
+						});
 					}
+					m->GetInternalThreadPool()->WaitAll();
 				}
 				else
 				{
-					auto it = group->m_instances.rbegin();
-
-					while (it != group->m_instances.rend())
+					// Render with sync
+					if (m_pEffectNode->RenderingOrder == RenderingOrder_FirstCreatedInstanceIsFirst)
 					{
-						if ((*it)->m_State == INSTANCE_STATE_ACTIVE)
+						for (auto instance : group->m_instances)
 						{
-							(*it)->Draw();
+							if (instance->m_State == INSTANCE_STATE_ACTIVE)
+							{
+								instance->Draw();
+							}
 						}
-						it++;
+					}
+					else
+					{
+						auto it = group->m_instances.rbegin();
+
+						while (it != group->m_instances.rend())
+						{
+							if ((*it)->m_State == INSTANCE_STATE_ACTIVE)
+							{
+								(*it)->Draw();
+							}
+							it++;
+						}
 					}
 				}
+
 
 				m_pEffectNode->EndRenderingGroup(group, m_pManager);
 			}

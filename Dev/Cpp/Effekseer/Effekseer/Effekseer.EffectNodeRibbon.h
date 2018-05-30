@@ -176,7 +176,9 @@ public:
 
 	void EndRenderingGroup(InstanceGroup* group, Manager* manager) override;
 
-	void Rendering(const Instance& instance, Manager* manager);
+	void Rendering(const Instance& instance, Manager* manager) override;
+
+	void RenderingAsync(const Instance& instance, int32_t index, Manager* manager) override;
 
 	void EndRendering(Manager* manager);
 
