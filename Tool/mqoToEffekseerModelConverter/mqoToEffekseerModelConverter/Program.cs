@@ -110,6 +110,21 @@ namespace mqoToEffekseerModelConverter
 				return;
 			}
 
+			// Debug
+			foreach(var o in mqoModel.Objects)
+			{
+				foreach(var v in o.Vertexes)
+				{
+					Console.WriteLine(string.Format("V {0} {1} {2}", v.X, v.Y, v.Z));
+				}
+
+				foreach (var f in o.Faces)
+				{
+					Console.WriteLine(string.Format("F_I {0}", string.Join(" ", f.Indexes)));
+					Console.WriteLine(string.Format("F_UV {0}", string.Join(" ", f.UV)));
+				}
+			}
+
 			var model = mqoIO.Realtime.Model.Create(mqoModel);
 			
 			List<byte[]> data = new List<byte[]>();
