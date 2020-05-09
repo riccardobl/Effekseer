@@ -29,43 +29,6 @@
 namespace Effekseer
 {
 
-LocalForceFieldTurbulenceParameter::LocalForceFieldTurbulenceParameter(int32_t seed, float scale, float strength, int octave) : Noise(seed)
-{
-	Noise.Octave = octave;
-	Noise.Scale = scale;
-	Strength = strength;
-}
-
-bool LocalForceFieldParameter::Load(uint8_t*& pos, int32_t version)
-{
-	auto br = BinaryReader<false>(pos, std::numeric_limits<int>::max());
-
-	LocalForceFieldType type{};
-	br.Read(type);
-
-	if (type == LocalForceFieldType::Turbulence)
-	{
-		int32_t seed{};
-		float scale{};
-		float strength{};
-		int octave{};
-
-		br.Read(seed);
-		br.Read(scale);
-		br.Read(strength);
-		br.Read(octave);
-
-		scale = 1.0f / scale;
-
-		Turbulence =
-			std::unique_ptr<LocalForceFieldTurbulenceParameter>(new LocalForceFieldTurbulenceParameter(seed, scale, strength, octave));
-	}
-
-	pos += br.GetOffset();
-
-	return true;
-}
-
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------

@@ -17,6 +17,7 @@
 #include "Parameter/Effekseer.Parameters.h"
 #include "SIMD/Effekseer.SIMDUtils.h"
 #include "Noise/CurlNoise.h"
+#include "ForceField/ForceFields.h"
 
 //----------------------------------------------------------------------------------
 //
@@ -237,28 +238,6 @@ struct ParameterTranslationEasing
 //----------------------------------------------------------------------------------
 //
 //----------------------------------------------------------------------------------
-
-enum class LocalForceFieldType : int32_t
-{
-	None = 0,
-	Turbulence = 1,
-};
-
-struct LocalForceFieldTurbulenceParameter
-{
-	float Strength = 0.1f;
-	CurlNoise Noise;
-
-	LocalForceFieldTurbulenceParameter(int32_t seed, float scale, float strength, int octave);
-};
-
-struct LocalForceFieldParameter
-{
-	std::unique_ptr <LocalForceFieldTurbulenceParameter> Turbulence;
-
-	bool Load(uint8_t*& pos, int32_t version);
-};
-
 
 enum class LocationAbsType : int32_t
 {

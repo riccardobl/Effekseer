@@ -12,14 +12,20 @@
 namespace Effekseer
 {
 
+/**
+	TODO
+	Implement rotation
+	Check falloff specification
+*/
+
 struct ForceFieldCommonParameter
 {
-	const Vec3f& Position;
-	const Vec3f& PreviousVelocity;
-	const Vec3f& PreviousSumVelocity;
-	const Vec3f& FieldCenter;
-	const Mat44f& FieldRotation;
-	const bool IsFieldRotated = false;
+	Vec3f Position;
+	Vec3f PreviousVelocity;
+	Vec3f PreviousSumVelocity;
+	Vec3f FieldCenter;
+	Mat44f FieldRotation;
+	bool IsFieldRotated = false;
 };
 
 struct ForceFieldFalloffCommonParameter
@@ -82,6 +88,8 @@ struct ForceFieldTurbulenceParameter
 {
 	float Power;
 	CurlNoise Noise;
+
+	ForceFieldTurbulenceParameter(int32_t seed, float scale, float strength, int octave);
 };
 
 struct ForceFieldDragParameter
@@ -121,6 +129,16 @@ public:
 	{
 		// Sphere
 		auto localPos = ffc.Position - ffc.FieldCenter;
+		auto distance = localPos.GetLength();
+		if (distance > fffc.MaxDistance)
+		{
+			return power;
+		}
+
+		if (distance < fffc.MinDistance)
+		{
+			return power;
+		}
 
 		// Tube
 		auto tubePos = localPos;
@@ -154,6 +172,17 @@ public:
 				   const ForceFieldFalloffConeParameter& ffft)
 	{
 		auto localPos = ffc.Position - ffc.FieldCenter;
+		auto distance = localPos.GetLength();
+		if (distance > fffc.MaxDistance)
+		{
+			return power;
+		}
+
+		if (distance < fffc.MinDistance)
+		{
+			return power;
+		}
+
 		auto angle = atan(localPos.GetX() / localPos.GetY());
 
 		if (angle > ffft.MaxAngle)
@@ -172,6 +201,7 @@ public:
 
 class ForceField
 {
+public:
 	/**
 		@brief	Force
 	*/
@@ -268,6 +298,79 @@ class ForceField
 	{
 		return -ffc.PreviousSumVelocity * ffp.Power;
 	}
+};
+
+enum class LocalForceFieldFalloffType : int32_t
+{
+	None = 0,
+	Sphere = 1,
+	Tube = 2,
+	Cone = 3,
+};
+
+enum class LocalForceFieldType : int32_t
+{
+	None = 0,
+	Force = 2,
+	Wind = 3,
+	Vortex = 4,
+	Maginetic = 5,
+	Charge = 6,
+	Turbulence = 1,
+	Drag = 7,
+};
+
+struct LocalForceFieldTurbulenceParameter
+{
+	float Strength = 0.1f;
+	CurlNoise Noise;
+
+	LocalForceFieldTurbulenceParameter(int32_t seed, float scale, float strength, int octave);
+};
+
+//! TODO Replace
+struct LocalForceFieldParameter
+{
+	std::unique_ptr<LocalForceFieldTurbulenceParameter> Turbulence;
+
+	bool Load(uint8_t*& pos, int32_t version);
+};
+
+//! TODO Replace
+struct LocalForceFieldElementParameter2
+{
+	std::unique_ptr<ForceFieldForceParameter> Force;
+	std::unique_ptr<ForceFieldWindParameter> Wind;
+	std::unique_ptr<ForceFieldVortexParameter> Vortex;
+	std::unique_ptr<ForceFieldMagineticParameter> Maginetic;
+	std::unique_ptr<ForceFieldChargeParameter> Charge;
+	std::unique_ptr<ForceFieldTurbulenceParameter> Turbulence;
+	std::unique_ptr<ForceFieldDragParameter> Drag;
+
+	std::unique_ptr<ForceFieldFalloffCommonParameter> FalloffCommon;
+	std::unique_ptr<ForceFieldFalloffSphereParameter> FalloffSphere;
+	std::unique_ptr<ForceFieldFalloffTubeParameter> FalloffTube;
+	std::unique_ptr<ForceFieldFalloffConeParameter> FalloffCone;
+
+	bool Load(uint8_t*& pos, int32_t version);
+};
+
+//! TODO rename
+struct LocalForceFieldParameter2
+{
+	std::array<LocalForceFieldElementParameter2, LocalFieldSlotMax> LocalForceFields;
+
+	bool Load(uint8_t*& pos, int32_t version);
+};
+
+struct LocalForceFieldInstance
+{
+	std::array<Vec3f, LocalFieldSlotMax> Velocities;
+
+	Vec3f VelocitySum;
+	Vec3f ModifyLocation;
+
+	void Update(const LocalForceFieldParameter2& parameter, const Vec3f& location, float magnification);
 };
 
 } // namespace Effekseer
