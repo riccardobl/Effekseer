@@ -62,7 +62,7 @@ set(effekseer_src
     Effekseer/SIMD/Effekseer.SIMDUtils.cpp
     Effekseer/Noise/CurlNoise.cpp
     Effekseer/Noise/PerlinNoise.cpp
-    Effekseer/ForceField/Vortex.cpp
+    Effekseer/ForceField/ForceFields.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC
