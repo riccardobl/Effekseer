@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - test-1
       - 15x
   pull_request:
     branches:
