@@ -427,7 +427,7 @@ namespace Effekseer.GUI
 				handle, 
 				width <= 0 ? 1 : width,
 				height <= 0 ? 1 : height,
-				Core.Option.ColorSpace.Value == Data.OptionValues.ColorSpaceType.LinearSpace,
+				Core.Option.ColorSpace.Value == Data.OptionValues.ColorSpaceType.GammaSpace,
 				deviceType))
 			{
 				isViewerShown = true;
