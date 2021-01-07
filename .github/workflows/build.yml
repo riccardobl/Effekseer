@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - ForBlenderAddon
       - 15x
   pull_request:
     branches:
