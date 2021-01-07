@@ -15,48 +15,17 @@ env:
   EFFEKSEER_VERSION: 160Alpha2
 
 jobs:
-  tests:
-    name: Run Tests
-    runs-on: vs2017-win2016
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-         git submodule update --init
-         git lfs install
-         git lfs pull
-        
-      - name: Build
-        run: python build.py from_ci
-        shell: cmd
-
-      - name: Test
-        run: |
-         cd build/Dev/Cpp/Test/Release/
-         Test.exe
-        shell: cmd
-
-      - name: Upload Test
-        uses: actions/upload-artifact@v1
-        with:
-          name: Test
-          path: build/Dev/Cpp/Test/Release/
-
-      - name: Test
-        run: python Script/test_screenshot.py
-        shell: cmd
 
   Build:
     strategy:
       fail-fast: true
       matrix:
-        name: [linux,windows,mac]
+        name: [linux,windows]
         include:
           - name: linux
             os: ubuntu-latest
           - name: windows
             os: vs2017-win2016
-          - name: mac
-            os: macos-latest 
     name: Build on ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -123,7 +92,7 @@ jobs:
           path: EffekseerTool*
 
   Deploy:
-    needs: [tests,Build]
+    needs: [Build]
     runs-on: ubuntu-latest
     steps:
      
@@ -141,11 +110,7 @@ jobs:
         with:
           name: Effekseer-runtime-${{ env.EFFEKSEER_VERSION }}
           path: dist/EffekseerRuntime
-      
-      - uses: actions/download-artifact@v2
-        with:
-          name: Effekseer-mac-${{ env.EFFEKSEER_VERSION }}
-          path: dist/
+
       
       - name: Prepare Release
         run: |
