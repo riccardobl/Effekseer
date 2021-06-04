@@ -99,6 +99,12 @@ public:
 
 	/**
 	@brief
+	\~english	Specify depth.
+	*/
+	virtual void SetDepth(GLuint depth, ::EffekseerRenderer::DepthReconstructionParameter params, bool hasMipmap = false) = 0;
+
+	/**
+	@brief
 	\~english get a device type
 	\~japanese デバイスの種類を取得する。
 	*/

@@ -860,6 +860,21 @@ void RendererImplemented::SetBackground(GLuint background, bool hasMipmap)
 	EffekseerRenderer::Renderer::SetBackground((background) ? m_backgroundGL : nullptr);
 }
 
+void RendererImplemented::SetDepth(GLuint depth, ::EffekseerRenderer::DepthReconstructionParameter params, bool hasMipmap)
+{
+	if (m_depthGL == nullptr)
+	{
+		m_depthGL = graphicsDevice_->CreateTexture(depth, hasMipmap, nullptr);
+	}
+	else
+	{
+		auto texture = static_cast<Backend::Texture*>(m_depthGL.Get());
+		texture->Init(depth, hasMipmap, nullptr);
+	}
+
+	EffekseerRenderer::Renderer::SetDepth((depth) ? m_depthGL : nullptr,params);
+}
+
 EffekseerRenderer::DistortingCallback* RendererImplemented::GetDistortingCallback()
 {
 	return m_distortingCallback;

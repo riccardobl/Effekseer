@@ -96,6 +96,8 @@ private:
 
 	::Effekseer::Backend::TextureRef m_backgroundGL;
 
+	::Effekseer::Backend::TextureRef m_depthGL;
+
 	// textures which are specified currently
 	std::vector<::Effekseer::Backend::TextureRef> currentTextures_;
 
@@ -187,6 +189,8 @@ public:
 	::Effekseer::MaterialLoaderRef CreateMaterialLoader(::Effekseer::FileInterface* fileInterface = nullptr) override;
 
 	void SetBackground(GLuint background, bool hasMipmap) override;
+
+	void SetDepth(GLuint depth, ::EffekseerRenderer::DepthReconstructionParameter params, bool hasMipmap) override;
 
 	EffekseerRenderer::DistortingCallback* GetDistortingCallback() override;
 

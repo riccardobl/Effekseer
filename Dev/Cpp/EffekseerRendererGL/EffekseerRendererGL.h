@@ -512,6 +512,15 @@ public:
 	*/
 	virtual void SetDepth(::Effekseer::Backend::TextureRef texture, const DepthReconstructionParameter& reconstructionParam);
 
+
+	/**
+		@brief	
+		\~English	Specify a depth texture and parameters to reconstruct from z to depth
+		\~Japanese	深度画像とZから深度を復元するためのパラメーターを設定する。
+	*/
+	virtual void SetDepth(GLuint depth, ::EffekseerRenderer::DepthReconstructionParameter params, bool hasMipmap);
+
+
 	/**
 		@brief	
 		\~English	Get the graphics device
